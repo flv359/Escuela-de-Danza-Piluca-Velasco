@@ -253,6 +253,16 @@ const introSplash = document.getElementById('introSplash');
   });
 
   const classCards = document.querySelectorAll('.clase-card');
+  let lastTouchCardActivation = 0;
+
+  const expandCard = card => {
+    classCards.forEach(otherCard => {
+      const isActive = otherCard === card;
+      otherCard.classList.toggle('is-expanded',isActive);
+      otherCard.setAttribute('aria-expanded',String(isActive));
+    });
+  };
+
   classCards.forEach(card=>{
     card.removeAttribute('title');
     card.removeAttribute('aria-label');
@@ -262,16 +272,16 @@ const introSplash = document.getElementById('introSplash');
     const toggleCard = () => {
       if(!window.matchMedia('(hover:none)').matches) return;
       const willOpen = !card.classList.contains('is-expanded');
-      classCards.forEach(otherCard => {
-        otherCard.classList.remove('is-expanded');
-        otherCard.setAttribute('aria-expanded','false');
-      });
-      card.classList.toggle('is-expanded',willOpen);
-      card.setAttribute('aria-expanded',String(willOpen));
+      if(willOpen) expandCard(card);
+      else {
+        card.classList.remove('is-expanded');
+        card.setAttribute('aria-expanded','false');
+      }
     };
 
     card.addEventListener('click', event => {
       if(event.target.closest('a')) return;
+      if(Date.now() - lastTouchCardActivation < 700) return;
       toggleCard();
     });
     card.addEventListener('keydown', event => {
@@ -281,6 +291,22 @@ const introSplash = document.getElementById('introSplash');
       }
     });
   });
+
+  const expandCardUnderFinger = touch => {
+    if(!window.matchMedia('(hover:none)').matches) return;
+    const card = document.elementFromPoint(touch.clientX,touch.clientY)?.closest('.clase-card');
+    if(!card) return;
+    lastTouchCardActivation = Date.now();
+    expandCard(card);
+  };
+
+  document.addEventListener('touchstart', event => {
+    if(event.touches.length === 1) expandCardUnderFinger(event.touches[0]);
+  },{passive:true});
+
+  document.addEventListener('touchmove', event => {
+    if(event.touches.length === 1) expandCardUnderFinger(event.touches[0]);
+  },{passive:true});
 
   // --- Completar la disciplina desde cada tarjeta de clase ---
   const disciplinaSelect = document.getElementById('pv_disciplina');
