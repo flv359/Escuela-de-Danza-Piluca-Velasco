@@ -164,7 +164,7 @@ const introSplash = document.getElementById('introSplash');
 
   function slideWidth(){
     const slide = track.querySelector('.slide');
-    const gap = 20;
+    const gap = parseFloat(getComputedStyle(track).columnGap) || 0;
     return slide.getBoundingClientRect().width + gap;
   }
   function updateProgress(){
@@ -204,7 +204,8 @@ const introSplash = document.getElementById('introSplash');
 
   function festivalStep(){
     const slide = festTrack.querySelector('.festival-slide');
-    return slide.getBoundingClientRect().width + 22;
+    const gap = parseFloat(getComputedStyle(festTrack).columnGap) || 0;
+    return slide.getBoundingClientRect().width + gap;
   }
   function updateFestivalProgress(){
     const max = festTrack.scrollWidth - festTrack.clientWidth;
@@ -235,31 +236,20 @@ const introSplash = document.getElementById('introSplash');
     festTrack.scrollLeft=festStartScroll-dx;
   });
 
-  // --- Ampliación de fotos de festivales y clases ---
-  const imageLightbox = document.getElementById('imageLightbox');
-  const lightboxImage = document.getElementById('lightboxImage');
-  const lightboxClose = document.getElementById('lightboxClose');
-
-  function openImage(src, alt='Imagen ampliada'){
-    lightboxImage.src=src;
-    lightboxImage.alt=alt;
-    imageLightbox.classList.add('open');
-    imageLightbox.setAttribute('aria-hidden','false');
-    document.body.classList.add('lightbox-open');
-  }
-  function closeImage(){
-    imageLightbox.classList.remove('open');
-    imageLightbox.setAttribute('aria-hidden','true');
-    document.body.classList.remove('lightbox-open');
-    lightboxImage.src='';
-  }
-  lightboxClose.addEventListener('click', closeImage);
-  imageLightbox.addEventListener('click', (e)=>{ if(e.target===imageLightbox) closeImage(); });
-  document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && imageLightbox.classList.contains('open')) closeImage(); });
-
   document.querySelectorAll('.festival-slide').forEach(slide=>{
-    slide.addEventListener('click', ()=>{ if(!festMoved) openImage(slide.dataset.image, slide.querySelector('img')?.alt || 'Festival de danza'); });
-    slide.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); openImage(slide.dataset.image, slide.querySelector('img')?.alt || 'Festival de danza'); } });
+    slide.removeAttribute('tabindex');
+    slide.removeAttribute('role');
+    slide.removeAttribute('aria-label');
+    slide.removeAttribute('data-image');
+    slide.classList.remove('zoomable');
+
+  });
+
+  // Evita la ampliación, el arrastre y la descarga directa habitual de imágenes.
+  document.querySelectorAll('img, .clase-card, .hero').forEach(element=>{
+    if(element.tagName === 'IMG') element.draggable = false;
+    element.addEventListener('dragstart', (event)=> event.preventDefault());
+    element.addEventListener('contextmenu', (event)=> event.preventDefault());
   });
 
   const classCards = document.querySelectorAll('.clase-card');
